@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ palette.name }} - Palette Share{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{{ palette.name }}</h1>
+        <p class="palette-meta">
+            By <strong>{{ palette.username }}</strong> |
+            Created {{ palette.created_at }}
+        </p>
+        {% if palette.description %}
+            <p class="palette-description">{{ palette.description }}</p>
+        {% endif %}
+    </div>
+    {% if current_user.is_authenticated and current_user.id == palette.user_id %}
+        <a href="{{ url_for('edit_palette', palette_id=palette.id) }}" class="btn btn-primary">Edit Palette</a>
+    {% endif %}
+</div>
+
+<div class="palette-view">
+    {% if categories %}
+        {% for category in categories %}
+        <div class="category-section">
+            <h2 class="category-title">{{ category.name }} <span class="color-count">({{ category.color_count }} colors)</span></h2>
+            <div class="color-grid">
+                {% for color in category_colors[category.id] %}
+                <div class="color-item">
+                    <div class="color-swatch" style="background-color: {{ color.hex_code }};" title="{{ color.hex_code }}"></div>
+                    <div class="color-info">
+                        <div class="color-format">
+                            <span class="format-label">HEX</span>
+                            <span class="format-value">{{ color.hex_code }}</span>
+                        </div>
+                        <div class="color-format">
+                            <span class="format-label">RGB</span>
+                            <span class="format-value">{{ color.r }}, {{ color.g }}, {{ color.b }}</span>
+                        </div>
+                        <div class="color-format">
+                            <span class="format-label">HSL</span>
+                            <span class="format-value">{{ color.h }}, {{ color.s }}%, {{ color.l }}%</span>
+                        </div>
+                        {% if color.name %}
+                            <div class="color-name-display">{{ color.name }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>This palette doesn't have any categories yet.
+            {% if current_user.is_authenticated and current_user.id == palette.user_id %}
+                <a href="{{ url_for('edit_palette', palette_id=palette.id) }}">Add some categories!</a>
+            {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

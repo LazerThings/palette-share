@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ palette.name }} - Palette Share{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Edit Palette: {{ palette.name }}</h1>
+    <a href="{{ url_for('view_palette', palette_id=palette.id) }}" class="btn btn-secondary">View Palette</a>
+</div>
+
+<div class="edit-container">
+    <div class="palette-info-section">
+        <h2>Palette Information</h2>
+        <form method="POST" action="{{ url_for('edit_palette', palette_id=palette.id) }}">
+            <div class="form-group">
+                <label for="name">Name *</label>
+                <input type="text" id="name" name="name" value="{{ palette.name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3">{{ palette.description }}</textarea>
+            </div>
+            <div class="form-group checkbox-group">
+                <label>
+                    <input type="checkbox" name="is_public" {% if palette.is_public %}checked{% endif %}>
+                    Make this palette public
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Palette Info</button>
+        </form>
+    </div>
+
+    <div class="categories-section">
+        <h2>Categories & Colors</h2>
+
+        <div class="add-category-form">
+            <h3>Add Category</h3>
+            <form method="POST" action="{{ url_for('add_category', palette_id=palette.id) }}" class="inline-form">
+                <input type="text" name="category_name" placeholder="Category name" required>
+                <button type="submit" class="btn btn-primary">Add Category</button>
+            </form>
+        </div>
+
+        {% if categories %}
+            {% for category in categories %}
+            <div class="category-edit-section">
+                <div class="category-header">
+                    <h3>{{ category.name }} ({{ category.color_count }} colors)</h3>
+                    <form method="POST" action="{{ url_for('delete_category', category_id=category.id) }}" style="display: inline;" onsubmit="return confirm('Delete this category and all its colors?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete Category</button>
+                    </form>
+                </div>
+
+                <div class="add-color-form">
+                    <form method="POST" action="{{ url_for('add_color', category_id=category.id) }}" class="color-form">
+                        <input type="text" name="color_input" placeholder="HEX: #FF5733 | RGB: 255,87,51 | HSL: 9,100,60" required title="Enter color in HEX, RGB, or HSL format">
+                        <input type="text" name="color_name" placeholder="Color name (optional)">
+                        <button type="submit" class="btn btn-sm btn-primary">Add Color</button>
+                    </form>
+                    <p class="format-help">Supported formats: HEX (#FF5733), RGB (255,87,51), HSL (9,100,60)</p>
+                </div>
+
+                <div class="color-grid">
+                    {% for color in category_colors[category.id] %}
+                    <div class="color-item editable">
+                        <div class="color-swatch" style="background-color: {{ color.hex_code }};"></div>
+                        <div class="color-info">
+                            <div class="color-format">
+                                <span class="format-label">HEX</span>
+                                <span class="format-value">{{ color.hex_code }}</span>
+                            </div>
+                            <div class="color-format">
+                                <span class="format-label">RGB</span>
+                                <span class="format-value">{{ color.r }}, {{ color.g }}, {{ color.b }}</span>
+                            </div>
+                            <div class="color-format">
+                                <span class="format-label">HSL</span>
+                                <span class="format-value">{{ color.h }}, {{ color.s }}%, {{ color.l }}%</span>
+                            </div>
+                            {% if color.name %}
+                                <div class="color-name-display">{{ color.name }}</div>
+                            {% endif %}
+                        </div>
+                        <form method="POST" action="{{ url_for('delete_color', color_id=color.id) }}" style="display: inline;" onsubmit="return confirm('Delete this color?');">
+                            <button type="submit" class="btn-icon btn-danger" title="Delete color">×</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No categories yet. Add your first category above!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
