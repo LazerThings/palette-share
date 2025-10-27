@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Palettes - Palette Share{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Browse Palettes</h1>
+    <p>Discover color palettes shared by the community</p>
+</div>
+
+<div class="search-bar">
+    <form method="GET" action="{{ url_for('browse') }}" class="search-form">
+        <input type="text" name="search" placeholder="Search palettes..." value="{{ search }}">
+        <input type="text" name="username" placeholder="Filter by username..." value="{{ username_filter }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if search or username_filter %}
+            <a href="{{ url_for('browse') }}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="palette-grid">
+    {% if palettes %}
+        {% for palette in palettes %}
+        <div class="palette-card">
+            <h3><a href="{{ url_for('view_palette', palette_id=palette.id) }}">{{ palette.name }}</a></h3>
+            <p class="palette-meta">
+                By <strong>{{ palette.username }}</strong> |
+                {{ palette.category_count }} categories |
+                {{ palette.color_count }} colors
+            </p>
+            {% if palette.description %}
+                <p class="palette-description">{{ palette.description }}</p>
+            {% endif %}
+            <div class="palette-actions">
+                <a href="{{ url_for('view_palette', palette_id=palette.id) }}" class="btn btn-sm btn-primary">View Palette</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>No palettes found. {% if current_user.is_authenticated %}<a href="{{ url_for('new_palette') }}">Create the first one!</a>{% else %}<a href="{{ url_for('register') }}">Register</a> to create one!{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
