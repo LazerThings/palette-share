@@ -29,9 +29,20 @@
                 <div class="color-item">
                     <div class="color-swatch" style="background-color: {{ color.hex_code }};" title="{{ color.hex_code }}"></div>
                     <div class="color-info">
-                        <span class="color-hex">{{ color.hex_code }}</span>
+                        <div class="color-format">
+                            <span class="format-label">HEX</span>
+                            <span class="format-value">{{ color.hex_code }}</span>
+                        </div>
+                        <div class="color-format">
+                            <span class="format-label">RGB</span>
+                            <span class="format-value">{{ color.r }}, {{ color.g }}, {{ color.b }}</span>
+                        </div>
+                        <div class="color-format">
+                            <span class="format-label">HSL</span>
+                            <span class="format-value">{{ color.h }}, {{ color.s }}%, {{ color.l }}%</span>
+                        </div>
                         {% if color.name %}
-                            <span class="color-name">{{ color.name }}</span>
+                            <div class="color-name-display">{{ color.name }}</div>
                         {% endif %}
                     </div>
                 </div>

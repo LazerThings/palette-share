@@ -448,7 +448,7 @@ main {
 
 .color-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
 }
 
@@ -497,7 +497,40 @@ main {
 }
 
 .color-info {
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.color-format {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    gap: 0.5rem;
+}
+
+.format-label {
+    font-weight: 600;
+    color: #667eea;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    min-width: 30px;
+}
+
+.format-value {
+    font-family: 'Courier New', monospace;
+    color: #333;
+    font-size: 0.7rem;
+    text-align: right;
+    flex: 1;
+}
+
+.color-name-display {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e1e8ed;
+    font-weight: 500;
+    color: #495057;
     text-align: center;
 }
 
@@ -546,6 +579,14 @@ main {
     font-size: 1rem;
     margin-bottom: 0.75rem;
     color: #495057;
+}
+
+.format-help {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-style: italic;
 }
 
 .inline-form,
@@ -630,7 +671,7 @@ main {
     }
 
     .color-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 
     .page-header {

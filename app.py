@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import re
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,6 +22,106 @@ def get_db():
     db = sqlite3.connect(DATABASE)
     db.row_factory = sqlite3.Row
     return db
+
+# Color Conversion Functions
+def hex_to_rgb(hex_code):
+    """Convert hex color to RGB tuple"""
+    hex_code = hex_code.lstrip('#')
+    return tuple(int(hex_code[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(r, g, b):
+    """Convert RGB to hex color"""
+    return '#{:02x}{:02x}{:02x}'.format(int(r), int(g), int(b))
+
+def rgb_to_hsl(r, g, b):
+    """Convert RGB to HSL"""
+    r, g, b = r / 255.0, g / 255.0, b / 255.0
+    max_c = max(r, g, b)
+    min_c = min(r, g, b)
+    l = (max_c + min_c) / 2.0
+
+    if max_c == min_c:
+        h = s = 0.0
+    else:
+        d = max_c - min_c
+        s = d / (2.0 - max_c - min_c) if l > 0.5 else d / (max_c + min_c)
+
+        if max_c == r:
+            h = (g - b) / d + (6.0 if g < b else 0.0)
+        elif max_c == g:
+            h = (b - r) / d + 2.0
+        else:
+            h = (r - g) / d + 4.0
+        h /= 6.0
+
+    return (int(h * 360), int(s * 100), int(l * 100))
+
+def hsl_to_rgb(h, s, l):
+    """Convert HSL to RGB"""
+    h, s, l = h / 360.0, s / 100.0, l / 100.0
+
+    if s == 0:
+        r = g = b = l
+    else:
+        def hue_to_rgb(p, q, t):
+            if t < 0: t += 1
+            if t > 1: t -= 1
+            if t < 1/6: return p + (q - p) * 6 * t
+            if t < 1/2: return q
+            if t < 2/3: return p + (q - p) * (2/3 - t) * 6
+            return p
+
+        q = l * (1 + s) if l < 0.5 else l + s - l * s
+        p = 2 * l - q
+        r = hue_to_rgb(p, q, h + 1/3)
+        g = hue_to_rgb(p, q, h)
+        b = hue_to_rgb(p, q, h - 1/3)
+
+    return (int(r * 255), int(g * 255), int(b * 255))
+
+def parse_color_input(color_input):
+    """
+    Parse color input in various formats and return hex, rgb, hsl
+    Supported formats:
+    - HEX: #FF5733 or FF5733
+    - RGB: rgb(255, 87, 51) or 255, 87, 51
+    - HSL: hsl(9, 100%, 60%) or 9, 100%, 60%
+    """
+    color_input = color_input.strip()
+
+    # Try HEX format
+    hex_match = re.match(r'^#?([0-9A-Fa-f]{6})$', color_input)
+    if hex_match:
+        hex_code = '#' + hex_match.group(1)
+        r, g, b = hex_to_rgb(hex_code)
+        h, s, l = rgb_to_hsl(r, g, b)
+        return hex_code, r, g, b, h, s, l
+
+    # Try RGB format
+    rgb_match = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color_input)
+    if not rgb_match:
+        rgb_match = re.match(r'^(\d+)\s*,\s*(\d+)\s*,\s*(\d+)$', color_input)
+
+    if rgb_match:
+        r, g, b = int(rgb_match.group(1)), int(rgb_match.group(2)), int(rgb_match.group(3))
+        if 0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255:
+            hex_code = rgb_to_hex(r, g, b)
+            h, s, l = rgb_to_hsl(r, g, b)
+            return hex_code, r, g, b, h, s, l
+
+    # Try HSL format
+    hsl_match = re.match(r'hsl\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*\)', color_input)
+    if not hsl_match:
+        hsl_match = re.match(r'^(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?$', color_input)
+
+    if hsl_match:
+        h, s, l = int(hsl_match.group(1)), int(hsl_match.group(2)), int(hsl_match.group(3))
+        if 0 <= h <= 360 and 0 <= s <= 100 and 0 <= l <= 100:
+            r, g, b = hsl_to_rgb(h, s, l)
+            hex_code = rgb_to_hex(r, g, b)
+            return hex_code, r, g, b, h, s, l
+
+    return None
 
 def init_db():
     """Initialize the database with tables"""
@@ -56,6 +157,12 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             category_id INTEGER NOT NULL,
             hex_code TEXT NOT NULL,
+            r INTEGER NOT NULL,
+            g INTEGER NOT NULL,
+            b INTEGER NOT NULL,
+            h INTEGER NOT NULL,
+            s INTEGER NOT NULL,
+            l INTEGER NOT NULL,
             name TEXT,
             position INTEGER DEFAULT 0,
             FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
@@ -65,6 +172,39 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_categories_palette ON categories(palette_id);
         CREATE INDEX IF NOT EXISTS idx_colors_category ON colors(category_id);
     ''')
+
+    # Migrate existing colors table if needed
+    cursor = db.execute("PRAGMA table_info(colors)")
+    columns = [column[1] for column in cursor.fetchall()]
+
+    if 'r' not in columns:
+        # Need to migrate - add new columns and populate them
+        try:
+            db.execute('ALTER TABLE colors ADD COLUMN r INTEGER DEFAULT 0')
+            db.execute('ALTER TABLE colors ADD COLUMN g INTEGER DEFAULT 0')
+            db.execute('ALTER TABLE colors ADD COLUMN b INTEGER DEFAULT 0')
+            db.execute('ALTER TABLE colors ADD COLUMN h INTEGER DEFAULT 0')
+            db.execute('ALTER TABLE colors ADD COLUMN s INTEGER DEFAULT 0')
+            db.execute('ALTER TABLE colors ADD COLUMN l INTEGER DEFAULT 0')
+
+            # Update existing rows
+            colors = db.execute('SELECT id, hex_code FROM colors').fetchall()
+            for color in colors:
+                try:
+                    r, g, b = hex_to_rgb(color['hex_code'])
+                    h, s, l = rgb_to_hsl(r, g, b)
+                    db.execute('''
+                        UPDATE colors SET r = ?, g = ?, b = ?, h = ?, s = ?, l = ?
+                        WHERE id = ?
+                    ''', (r, g, b, h, s, l, color['id']))
+                except:
+                    pass
+
+            db.commit()
+        except sqlite3.OperationalError:
+            # Columns already exist or other error
+            pass
+
     db.commit()
     db.close()
 
@@ -403,7 +543,7 @@ def add_category(palette_id):
 @login_required
 def add_color(category_id):
     """Add a color to a category"""
-    hex_code = request.form.get('hex_code', '').strip()
+    color_input = request.form.get('color_input', '').strip()
     color_name = request.form.get('color_name', '').strip()
 
     # Get palette_id and check ownership
@@ -427,18 +567,23 @@ def add_color(category_id):
 
     palette_id = category['palette_id']
 
-    if not hex_code:
-        flash('Hex code is required', 'error')
+    if not color_input:
+        flash('Color value is required', 'error')
         db.close()
         return redirect(url_for('edit_palette', palette_id=palette_id))
 
-    # Ensure hex code starts with #
-    if not hex_code.startswith('#'):
-        hex_code = '#' + hex_code
+    # Parse color input
+    parsed = parse_color_input(color_input)
+    if not parsed:
+        flash('Invalid color format. Use HEX (#FF5733), RGB (255,87,51), or HSL (9,100,60)', 'error')
+        db.close()
+        return redirect(url_for('edit_palette', palette_id=palette_id))
+
+    hex_code, r, g, b, h, s, l = parsed
 
     db.execute(
-        'INSERT INTO colors (category_id, hex_code, name) VALUES (?, ?, ?)',
-        (category_id, hex_code, color_name)
+        'INSERT INTO colors (category_id, hex_code, r, g, b, h, s, l, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        (category_id, hex_code, r, g, b, h, s, l, color_name)
     )
     db.commit()
     db.close()

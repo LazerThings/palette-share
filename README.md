@@ -7,9 +7,10 @@ A Flask-based web application for sharing and discovering large color palettes o
 - **User Authentication**: Secure registration and login system
 - **Create Palettes**: Build large color palettes with unlimited colors
 - **Organize by Categories**: Group colors into meaningful categories within each palette
+- **Multiple Color Formats**: Input colors in HEX, RGB, or HSL formats - all formats are automatically stored and displayed
 - **Public/Private Palettes**: Choose to share your palettes publicly or keep them private
 - **Browse & Search**: Discover palettes shared by the community with search and filter options
-- **Rich Color Information**: Store hex codes and optional color names
+- **Rich Color Information**: Store and view colors in HEX, RGB, and HSL formats with optional color names
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ## Tech Stack
@@ -105,6 +106,8 @@ palette-share/
 - `id`: Primary key
 - `category_id`: Foreign key to categories
 - `hex_code`: Hex color code (e.g., #FF5733)
+- `r`, `g`, `b`: RGB color values (0-255)
+- `h`, `s`, `l`: HSL color values (H: 0-360, S: 0-100, L: 0-100)
 - `name`: Optional color name
 - `position`: Order within category
 
@@ -120,10 +123,12 @@ palette-share/
 ### Adding Categories and Colors
 1. After creating a palette, you'll be taken to the edit page
 2. Add categories using the "Add Category" form
-3. Within each category, add colors by entering:
-   - Hex code (e.g., #FF5733 or FF5733)
+3. Within each category, add colors in any of these formats:
+   - **HEX**: `#FF5733` or `FF5733`
+   - **RGB**: `255,87,51` or `rgb(255, 87, 51)`
+   - **HSL**: `9,100,60` or `hsl(9, 100%, 60%)`
    - Optional color name
-4. Colors are displayed with visual swatches
+4. Colors are displayed with visual swatches showing all three formats (HEX, RGB, HSL)
 
 ### Browsing Palettes
 1. Click "Browse" in the navigation bar

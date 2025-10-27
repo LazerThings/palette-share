@@ -53,10 +53,11 @@
 
                 <div class="add-color-form">
                     <form method="POST" action="{{ url_for('add_color', category_id=category.id) }}" class="color-form">
-                        <input type="text" name="hex_code" placeholder="#FF5733" required pattern="^#?[0-9A-Fa-f]{6}$" title="Enter a valid hex color (e.g., #FF5733 or FF5733)">
+                        <input type="text" name="color_input" placeholder="HEX: #FF5733 | RGB: 255,87,51 | HSL: 9,100,60" required title="Enter color in HEX, RGB, or HSL format">
                         <input type="text" name="color_name" placeholder="Color name (optional)">
                         <button type="submit" class="btn btn-sm btn-primary">Add Color</button>
                     </form>
+                    <p class="format-help">Supported formats: HEX (#FF5733), RGB (255,87,51), HSL (9,100,60)</p>
                 </div>
 
                 <div class="color-grid">
@@ -64,9 +65,20 @@
                     <div class="color-item editable">
                         <div class="color-swatch" style="background-color: {{ color.hex_code }};"></div>
                         <div class="color-info">
-                            <span class="color-hex">{{ color.hex_code }}</span>
+                            <div class="color-format">
+                                <span class="format-label">HEX</span>
+                                <span class="format-value">{{ color.hex_code }}</span>
+                            </div>
+                            <div class="color-format">
+                                <span class="format-label">RGB</span>
+                                <span class="format-value">{{ color.r }}, {{ color.g }}, {{ color.b }}</span>
+                            </div>
+                            <div class="color-format">
+                                <span class="format-label">HSL</span>
+                                <span class="format-value">{{ color.h }}, {{ color.s }}%, {{ color.l }}%</span>
+                            </div>
                             {% if color.name %}
-                                <span class="color-name">{{ color.name }}</span>
+                                <div class="color-name-display">{{ color.name }}</div>
                             {% endif %}
                         </div>
                         <form method="POST" action="{{ url_for('delete_color', color_id=color.id) }}" style="display: inline;" onsubmit="return confirm('Delete this color?');">
