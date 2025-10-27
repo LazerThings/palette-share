@@ -160,7 +160,7 @@ For production deployment:
 
 ## License
 
-This project is licensed under the Open Software Project License (OSPL). See the LICENSE file for details.
+This project is licensed under the Open Source Permissive License (OSPL). See the LICENSE file for details.
 
 ## Contributing
 
