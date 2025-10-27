@@ -23,6 +23,28 @@ def get_db():
     db.row_factory = sqlite3.Row
     return db
 
+def check_and_init_db():
+    """Check if database exists and has tables, initialize if needed"""
+    if not os.path.exists(DATABASE):
+        print(f"Database not found. Initializing {DATABASE}...")
+        init_db()
+        return
+
+    # Check if tables exist
+    try:
+        db = get_db()
+        cursor = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+        if not cursor.fetchone():
+            print("Database tables not found. Initializing...")
+            db.close()
+            init_db()
+        else:
+            db.close()
+    except Exception as e:
+        print(f"Error checking database: {e}")
+        print("Attempting to initialize database...")
+        init_db()
+
 # Color Conversion Functions
 def hex_to_rgb(hex_code):
     """Convert hex color to RGB tuple"""
@@ -224,6 +246,9 @@ def load_user(user_id):
     if user_data:
         return User(user_data['id'], user_data['username'], user_data['email'])
     return None
+
+# Initialize database on startup
+check_and_init_db()
 
 @app.route('/')
 def index():

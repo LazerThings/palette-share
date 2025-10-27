@@ -39,12 +39,19 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Set a secret key (optional, for production):
+4. Initialize the database:
+```bash
+python init_db.py
+```
+
+5. Set a secret key (optional, for production):
 ```bash
 export SECRET_KEY='your-secret-key-here'
 ```
 
 ## Usage
+
+### Development Mode
 
 1. Start the application:
 ```bash
@@ -58,11 +65,26 @@ http://localhost:5000
 
 3. Register a new account and start creating palettes!
 
+### Production Mode (with Gunicorn)
+
+1. Make sure the database is initialized:
+```bash
+python init_db.py
+```
+
+2. Start Gunicorn:
+```bash
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+**Note**: The database is automatically initialized on first run if it doesn't exist, but you can also run `init_db.py` manually to ensure proper setup.
+
 ## Application Structure
 
 ```
 palette-share/
 ├── app.py                 # Main Flask application
+├── init_db.py            # Database initialization script
 ├── requirements.txt       # Python dependencies
 ├── palettes.db           # SQLite database (created automatically)
 ├── templates/            # HTML templates
